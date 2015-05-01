@@ -1,0 +1,10 @@
+[Feed Settings]
+feed = http://www.equestriadaily.com/search/label/Music
+most recent scrape = 2015-05-01 08:45:26.069681
+music of the day = False
+temp directory = ./.tmp
+
+[AWS Settings]
+aws access key id = XXXXXXXXXXXXXXXXXXXX
+aws secret access key = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
