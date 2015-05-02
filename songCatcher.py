@@ -96,6 +96,7 @@ def main():
     # Get the time of this scrape
     current_scrape_time = datetime.now()
     print "Current Scrape Time: %s" % current_scrape_time
+    feed_name = get_config("Feed Settings", "Feed Name")
     # Getting the feed url
     feed_url = get_config("Feed Settings", "Feed")
     # Getting the most recent scrape parameter from the config and parsing it into a datetime object
@@ -103,6 +104,9 @@ def main():
     last_scrape_datetime = pytz.utc.localize(date_parser.parse(last_scrape))
     music_of_the_day_setting = get_config("Feed Settings", "Music of the Day")
     temp_directory_path = get_config("Feed Settings", "Temp Directory")
+    bucket_name = get_config("Feed Settings", "Bucket Name")
+    rss_file_name = get_config("Feed Settings", "RSS File Name")
+    region_name = get_config("AWS Settings", "Region Name")
 
     new_music_posts = []
     new_posts = True
@@ -157,7 +161,7 @@ def main():
             music_files.append(new_music_file)
 
     # Upload each new song to S3, saving its url in the MusicFile object
-    song_catcher_bucket = con.get_bucket("songcatcher")
+    song_catcher_bucket = con.get_bucket(bucket_name)
     for song in music_files:
         k = Key(song_catcher_bucket)
         k.key = "media/%s" % song.song_file_name
@@ -166,11 +170,11 @@ def main():
             k.set_contents_from_filename(song.song_path)
         else:
             print "File %s already exists at %s" % (song.song_title, k.key)
-        song_aws_url = "https://s3-us-west-2.amazonaws.com/songcatcher/media/%s" % song.song_file_name
+        song_aws_url = "https://s3-%s.amazonaws.com/%s/media/%s" % (region_name, bucket_name, song.song_file_name)
         song.song_aws_url = song_aws_url
 
     # Download the most recent RSS feed from S3 and parse into objects
-    rss_file = song_catcher_bucket.get_key("songcatcher.xml")
+    rss_file = song_catcher_bucket.get_key("%s.xml" % rss_file_name)
     if rss_file:
         print "RSS file found"
         d = feedparser.parse(rss_file.get_contents_as_string())
@@ -194,10 +198,10 @@ def main():
                 print "entry %s IS in music_file_ids" % entry.id
 
     # Add the new MusicFile objects to the rss feed objects
-    fg.id("https://s3-us-west-2.amazonaws.com/songcatcher/songcatcher.xml")
-    fg.title("SongCatcher")
+    fg.id("https://s3-%s.amazonaws.com/%s/%s.xml" % (region_name, bucket_name, rss_file_name))
+    fg.title(feed_name)
     fg.author({'name': 'Calvinball Jones', 'email': 'calvinballjones@gmail.com'})
-    fg.link(href='https://s3-us-west-2.amazonaws.com/songcatcher/songcatcher.xml', rel='self')
+    fg.link(href='https://s3-%s.amazonaws.com/%s/%s.xml' % (region_name, bucket_name, rss_file_name), rel='self')
     fg.language('en')
     fg.description("New songs from Equestria Daily!")
 
@@ -213,10 +217,10 @@ def main():
 
     # Create a new RSS feed file and upload it
     fg.rss_str(pretty=True)
-    fg.rss_file('songcatcher.xml')
+    fg.rss_file('%s.xml' % feed_name)
     k = Key(song_catcher_bucket)
-    k.key = "songcatcher.xml"
-    k.set_contents_from_filename('songcatcher.xml')
+    k.key = "%s.xml" % feed_name
+    k.set_contents_from_filename('%s.xml' % feed_name)
 
     # Delete songs in the temp directory
     for f in os.listdir('.'):
