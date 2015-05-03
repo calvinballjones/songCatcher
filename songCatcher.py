@@ -51,13 +51,14 @@ def get_blog_posts(url, new_posts, last_scrape_datetime):
         post_url = post.find(class_="post hentry").find(class_="post-header").h3.a['href']
         post_created = post.find(class_="post hentry").find(class_="post-footer").find(class_="post-footer-meta") \
             .find(class_="post-timestamp").find(class_="timestamp-link").find(class_='published')['title']
-        post_created_datetime = date_parser.parse(post_created)
+        post_created_datetime = date_parser.parse(post_created).astimezone(pytz.utc)
         post_tags = post.find_all(rel="tag")
         post_tags_content = []
         music_of_the_day = False
         for tag in post_tags:
             post_tags_content.append(tag.string)
 
+        # print "post_created_datetime for %s is %s" % (post_title, post_created_datetime)
         if post_created_datetime <= last_scrape_datetime:
             return False, next_page_url
 
@@ -94,19 +95,20 @@ def scrape_youtube_links(url, youtube_links, music_of_the_day, music_of_the_day_
 
 def main():
     # Get the time of this scrape
-    current_scrape_time = datetime.now()
-    print "Current Scrape Time: %s" % current_scrape_time
+    current_scrape_time = datetime.now(pytz.utc)
     feed_name = get_config("Feed Settings", "Feed Name")
     # Getting the feed url
     feed_url = get_config("Feed Settings", "Feed")
     # Getting the most recent scrape parameter from the config and parsing it into a datetime object
     last_scrape = get_config("Feed Settings", "Most Recent Scrape")
-    last_scrape_datetime = pytz.utc.localize(date_parser.parse(last_scrape))
+    last_scrape_datetime = date_parser.parse(last_scrape)
     music_of_the_day_setting = get_config("Feed Settings", "Music of the Day")
     temp_directory_path = get_config("Feed Settings", "Temp Directory")
     bucket_name = get_config("Feed Settings", "Bucket Name")
     rss_file_name = get_config("Feed Settings", "RSS File Name")
     region_name = get_config("AWS Settings", "Region Name")
+    # print "Current Scrape Time: %s" % current_scrape_time
+    # print "Last Scrape Time: %s" % last_scrape_datetime
 
     new_music_posts = []
     new_posts = True
@@ -183,10 +185,10 @@ def main():
             print "Appending %s to music_file_ids" % f.song_aws_url
             music_file_ids.append(f.song_aws_url)
         for entry in d.entries:
-            print "entry.id is %s" % entry.id
+            # print "entry.id is %s" % entry.id
             if entry.id not in music_file_ids:
-                print "entry %s IS NOT in music_file_ids" % entry.id
-                print "entry.author_detail: %s" % entry.author_detail
+                # print "entry %s IS NOT in music_file_ids" % entry.id
+                # print "entry.author_detail: %s" % entry.author_detail
                 music_files.append(MusicFile(song_youtube_url=entry.guid,
                                              song_post_published=entry.published,
                                              song_title=entry.title,
@@ -195,7 +197,8 @@ def main():
                                              )
                                    )
             else:
-                print "entry %s IS in music_file_ids" % entry.id
+                pass
+                # print "entry %s IS in music_file_ids" % entry.id
 
     # Add the new MusicFile objects to the rss feed objects
     fg.id("https://s3-%s.amazonaws.com/%s/%s.xml" % (region_name, bucket_name, rss_file_name))
