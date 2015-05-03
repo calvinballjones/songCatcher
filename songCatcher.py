@@ -220,10 +220,10 @@ def main():
 
     # Create a new RSS feed file and upload it
     fg.rss_str(pretty=True)
-    fg.rss_file('%s.xml' % feed_name)
+    fg.rss_file('%s.xml' % rss_file_name)
     k = Key(song_catcher_bucket)
-    k.key = "%s.xml" % feed_name
-    k.set_contents_from_filename('%s.xml' % feed_name)
+    k.key = "%s.xml" % rss_file_name
+    k.set_contents_from_filename('%s.xml' % rss_file_name)
 
     # Delete songs in the temp directory
     for f in os.listdir('.'):
