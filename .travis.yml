@@ -7,6 +7,6 @@ python:
   - "3.4"
   - "nightly"
 # command to install dependencies
-install: "pip install -r --allow-external requirements.txt"
+install: "pip install --allow-external -r requirements.txt"
 # command to run tests
 script: nosetests
