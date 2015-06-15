@@ -3,7 +3,7 @@ beautifulsoup4==4.3.2
 boto==2.38.0
 dateutils==0.6.6
 feedgen==0.3.1
-feedparser==5.2.0
+feedparser==5.2.0.post1
 lxml==3.4.4
 python-dateutil==2.4.2
 pytz==2015.4
