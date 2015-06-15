@@ -1,3 +1,5 @@
+#! /usr/local/bin/python
+
 from __future__ import unicode_literals
 from datetime import datetime
 import ConfigParser
